@@ -22,7 +22,7 @@ public class Item {
     private String description;
     @Column(name = "is_available")
     private Boolean available;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
     private User owner;
