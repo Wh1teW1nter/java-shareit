@@ -22,11 +22,10 @@ public class Item {
     private String description;
     @Column(name = "is_available")
     private Boolean available;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
     private User owner;
-    //temporary transient until Sprint add-item-requests
     @Transient
     private ItemRequest request;
 }
