@@ -1,6 +1,9 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
@@ -81,29 +84,31 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponse> findBookingsOfUser(BookingState state, Long userId) {
+    public List<BookingResponse> findBookingsOfUser(BookingState state, Long userId, int from, int size) {
         UserDto userDto = userService.findUserById(userId);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings;
+        Sort sort = Sort.by("start").descending();
+        Pageable pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, sort);
 
         switch (state) {
             case ALL:
-                bookings = repository.findAllByBookerIdOrderByStartDesc(userId);
+                bookings = repository.findAllByBookerId(userId, pageRequest);
                 break;
             case PAST:
-                bookings = repository.findAllByBookerIdAndEndBeforeOrderByStartDesc(userId, now);
+                bookings = repository.findAllByBookerIdAndEndBefore(userId, now, pageRequest);
                 break;
             case WAITING:
-                bookings = repository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING);
+                bookings = repository.findAllByBookerIdAndStatus(userId, BookingStatus.WAITING, pageRequest);
                 break;
             case REJECTED:
-                bookings = repository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED);
+                bookings = repository.findAllByBookerIdAndStatus(userId, BookingStatus.REJECTED, pageRequest);
                 break;
             case FUTURE:
-                bookings = repository.findAllByBookerIdAndStartAfterOrderByStartDesc(userId, now);
+                bookings = repository.findAllByBookerIdAndStartAfter(userId, now, pageRequest);
                 break;
             case CURRENT:
-                bookings = repository.findByBookerIdAndStartBeforeAndEndAfterOrderByEndDesc(userId, now, now);
+                bookings = repository.findByBookerIdAndStartBeforeAndEndAfter(userId, now, now, pageRequest);
                 break;
             default:
                 throw new UnsupportedBookingStateException("Unknown state: UNSUPPORTED_STATUS");
@@ -112,29 +117,31 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponse> findBookingsOfOwner(BookingState state, Long userId) {
+    public List<BookingResponse> findBookingsOfOwner(BookingState state, Long userId, int from, int size) {
         UserDto userDto = userService.findUserById(userId);
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings;
+        Sort sort = Sort.by("start").descending();
+        Pageable pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, sort);
 
         switch (state) {
             case ALL:
-                bookings = repository.findByItemOwnerIdOrderByStartDesc(userId);
+                bookings = repository.findByItemOwnerId(userId, pageRequest);
                 break;
             case PAST:
-                bookings = repository.findByItemOwnerIdAndEndBeforeOrderByStartDesc(userId, now);
+                bookings = repository.findByItemOwnerIdAndEndBefore(userId, now, pageRequest);
                 break;
             case WAITING:
-                bookings = repository.findByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING);
+                bookings = repository.findByItemOwnerIdAndStatus(userId, BookingStatus.WAITING, pageRequest);
                 break;
             case REJECTED:
-                bookings = repository.findByItemOwnerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED);
+                bookings = repository.findByItemOwnerIdAndStatus(userId, BookingStatus.REJECTED, pageRequest);
                 break;
             case FUTURE:
-                bookings = repository.findByItemOwnerIdAndStartAfterOrderByStartDesc(userId, now);
+                bookings = repository.findByItemOwnerIdAndStartAfter(userId, now, pageRequest);
                 break;
             case CURRENT:
-                bookings = repository.findByItemOwnerIdAndStartBeforeAndEndAfterOrderByStartDesc(userId, now, now);
+                bookings = repository.findByItemOwnerIdAndStartBeforeAndEndAfter(userId, now, now, pageRequest);
                 break;
             default:
                 throw new UnsupportedBookingStateException("Unknown state: UNSUPPORTED_STATUS");

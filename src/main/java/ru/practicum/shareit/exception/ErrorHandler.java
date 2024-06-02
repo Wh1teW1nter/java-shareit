@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.exception.dto.ErrorResponse;
 
+import javax.validation.ConstraintViolationException;
 
 
 @RestControllerAdvice
@@ -76,6 +77,20 @@ public class ErrorHandler {
     public ErrorResponse handleCommentValidationException(CommentValidationException e) {
         log.error(e.getMessage());
         return new ErrorResponse("Validation for comment failed", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleItemRequestNotFoundException(ItemRequestNotFoundException e) {
+        log.error(e.getMessage());
+        return new ErrorResponse("Search for ItemRequest failed", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolationException(ConstraintViolationException e) {
+        log.error(e.getMessage());
+        return new ErrorResponse("Incorrect request parameter", e.getMessage());
     }
 
     @ExceptionHandler

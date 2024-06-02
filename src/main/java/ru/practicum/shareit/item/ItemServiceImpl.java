@@ -2,6 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -13,6 +15,8 @@ import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.ItemRequestService;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.exception.BusinessObjectNotFoundException;
 import ru.practicum.shareit.user.UserService;
@@ -37,10 +41,13 @@ public class ItemServiceImpl implements ItemService {
     private final UserService userService;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestService itemRequestService;
 
     @Override
-    public List<ItemViewDto> getAllItemsByOwner(Long id) {
-        Map<Long, Item> itemMap = repository.findAllByOwnerId(id)
+    public List<ItemViewDto> getAllItemsByOwner(Long id, int from, int size) {
+        UserDto owner = userService.findUserById(id);
+        Pageable pageRequest = PageRequest.of(from, size);
+        Map<Long, Item> itemMap = repository.findAllByOwnerId(id, pageRequest)
                 .stream()
                 .collect(Collectors.toMap(Item::getId, Function.identity()));
 
@@ -59,7 +66,7 @@ public class ItemServiceImpl implements ItemService {
                 .map(item -> ItemMapper.toItemViewForOwnerDto(item,
                         bookingMap.getOrDefault(item.getId(), Collections.emptyList()),
                         commentMap.getOrDefault(item.getId(), Collections.emptyList())
-                        ))
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -69,6 +76,10 @@ public class ItemServiceImpl implements ItemService {
         UserDto userDto = userService.findUserById(id);
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(UserMapper.toUser(userDto));
+        if (itemDto.getRequestId() != null) {
+            ItemRequest itemRequest = itemRequestService.findRequestById(itemDto.getRequestId());
+            item.setRequest(itemRequest);
+        }
         return ItemMapper.toItemDto(repository.save(item));
     }
 
@@ -103,6 +114,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemViewDto findItemById(Long itemId, Long userId) {
+        UserDto userDto = userService.findUserById(userId);
         Item item = findItemByIdFromRepository(itemId);
         List<CommentDto> comments = commentRepository.findAllByItemId(itemId)
                 .stream()
@@ -130,12 +142,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItemByText(String text) {
+    public List<ItemDto> searchItemByText(String text, int from, int size) {
         if (text.isEmpty() || text.isBlank()) {
             return new ArrayList<>();
         }
-        return ItemMapper.mapToItemDto(repository.searchItemByText(text)
-                .stream().filter(Item::getAvailable).collect(Collectors.toList()));
+        Pageable pageRequest = PageRequest.of(from, size);
+        return ItemMapper.mapToItemDto(repository.findByNameOrDescriptionContainingIgnoreCaseAndAvailableIsTrue(text,
+                text, pageRequest));
     }
 
     @Transactional

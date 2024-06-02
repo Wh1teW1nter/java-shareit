@@ -10,6 +10,8 @@ import ru.practicum.shareit.item.dto.ItemViewDto;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @Validated
@@ -26,9 +28,11 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemViewDto> getAllItemsViewDtoByOwner(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemViewDto> getAllItemsViewDtoByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                                       @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                                        @Positive @RequestParam(defaultValue = "10") int size) {
         log.info("пришел GET запрос /items с userId: {}", userId);
-        List<ItemViewDto> allItems = itemService.getAllItemsByOwner(userId);
+        List<ItemViewDto> allItems = itemService.getAllItemsByOwner(userId, from, size);
         log.info("отправлен ответ на GET запрос /items с userId: {} с телом: {}", userId, allItems);
         return allItems;
     }
@@ -60,9 +64,11 @@ public class ItemController {
     }
 
     @GetMapping(value = "/search")
-    public List<ItemDto> searchItemDtoByTextResponse(@NotNull @RequestParam String text) {
+    public List<ItemDto> searchItemDtoByTextResponse(@NotNull @RequestParam String text,
+                                                     @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                                     @Positive @RequestParam(defaultValue = "10") int size) {
         log.info("пришел GET запрос /items/search с text: {}", text);
-        List<ItemDto> responseListItemDto = itemService.searchItemByText(text);
+        List<ItemDto> responseListItemDto = itemService.searchItemByText(text, from, size);
         log.info("отправлен ответ на GET запрос /items/search с text: {} с телом: {}", text, responseListItemDto);
         return responseListItemDto;
     }
