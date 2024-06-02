@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.user.User;
 
@@ -9,7 +11,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "comments")
 @NoArgsConstructor
@@ -24,10 +27,10 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String text;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
     private Item item;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private User author;
     @Column(name = "created_date")
