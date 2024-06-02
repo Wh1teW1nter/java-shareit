@@ -9,6 +9,8 @@ import javax.persistence.*;
 
 @Getter
 @Setter
+@ToString
+@EqualsAndHashCode
 @Entity
 @NoArgsConstructor
 @Table(name = "items")
