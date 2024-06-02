@@ -3,6 +3,8 @@ package ru.practicum.shareit.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.BusinessObjectNotFoundException;
 import ru.practicum.shareit.exception.EmailConflictException;
 import ru.practicum.shareit.exception.UserValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -13,50 +15,47 @@ import java.util.Objects;
 
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository repository;
 
     @Autowired
-    public UserServiceImpl(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserServiceImpl(UserRepository repository) {
+        this.repository = repository;
     }
 
     @Override
     public List<UserDto> getAllUsers() {
-        return UserMapper.mapToUserDto(userStorage.getAllUsers());
+        return UserMapper.mapToUserDto(repository.findAll());
     }
 
-
     @Override
+    @Transactional
     public UserDto create(UserDto userDto) {
         if (userDto.getEmail() == null) {
             throw new UserValidationException("Email must not be null");
         }
-        if (userStorage.doesEmailNotExist(userDto.getEmail())) {
-            User user = userStorage.create(UserMapper.toUser(userDto));
-            return UserMapper.toUserDto(user);
-        }
-        log.warn("creation of user with email {} failed", userDto.getEmail());
-        throw new EmailConflictException("User email is already registered");
+        User user = repository.save(UserMapper.toUser(userDto));
+        return UserMapper.toUserDto(user);
     }
 
     @Override
+    @Transactional
     public UserDto update(UserDto userDto, Long id) {
-        User oldUser = userStorage.findUserById(id);
-        User newUser = new User(oldUser.getId(), oldUser.getName(), oldUser.getEmail());
+        User oldUser = UserMapper.toUser(findUserById(id));
         boolean updated = false;
-        if (userDto.getEmail() != null && userStorage.doesEmailNotExist(userDto.getEmail())
-                || Objects.equals(userDto.getEmail(), newUser.getEmail())) {
-            newUser.setEmail(userDto.getEmail());
+        if (userDto.getEmail() != null && doesEmailNotExist(userDto.getEmail())
+                || Objects.equals(userDto.getEmail(), oldUser.getEmail())) {
+            oldUser.setEmail(userDto.getEmail());
             updated = true;
         }
         if (userDto.getName() != null) {
-            newUser.setName(userDto.getName());
+            oldUser.setName(userDto.getName());
             updated = true;
         }
         if (updated) {
-            return UserMapper.toUserDto(userStorage.update(oldUser, newUser, id));
+            return UserMapper.toUserDto(repository.save(oldUser));
         }
         log.warn("update of user with id {} failed", id);
         throw new EmailConflictException("Unable to update user with given email");
@@ -64,11 +63,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto findUserById(Long id) {
-        return UserMapper.toUserDto(userStorage.findUserById(id));
+        return UserMapper.toUserDto(repository.findById(id)
+                .orElseThrow(() -> new BusinessObjectNotFoundException("User was not found")));
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
-        userStorage.delete(id);
+        repository.deleteById(id);
+    }
+
+    private boolean doesEmailNotExist(String email) {
+        return !repository.findAll().stream().anyMatch(user -> user.getEmail().equals(email));
     }
 }
