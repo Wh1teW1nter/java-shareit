@@ -41,6 +41,14 @@ public class BookingMapper {
         return newBooking;
     }
 
+    public static Booking toBookingMapper(BookingRequest bookingDto) {
+        Booking newBooking = new Booking();
+        newBooking.setId(bookingDto.getId());
+        newBooking.setStart(bookingDto.getStart());
+        newBooking.setEnd(bookingDto.getEnd());
+        return newBooking;
+    }
+
     public static BookingViewDto toBookingViewDto(Booking booking) {
         return BookingViewDto.builder()
                 .id(booking.getId())

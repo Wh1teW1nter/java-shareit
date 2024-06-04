@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ItemService {
 
-    List<ItemViewDto> getAllItemsByOwner(Long id);
+    List<ItemViewDto> getAllItemsByOwner(Long id, int from, int size);
 
     ItemDto create(ItemDto itemDto, Long id);
 
@@ -18,7 +18,7 @@ public interface ItemService {
 
     void delete(Long id);
 
-    List<ItemDto> searchItemByText(String text);
+    List<ItemDto> searchItemByText(String text, int from, int size);
 
     CommentDto addComment(CommentDto commentDto, Long itemId, Long userId);
 }

@@ -1,18 +1,20 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
 
 import javax.persistence.*;
 
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 @Entity
 @NoArgsConstructor
 @Table(name = "items")
+@AllArgsConstructor
 public class Item {
 
     @Id
@@ -26,7 +28,7 @@ public class Item {
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
     private User owner;
-    //temporary transient until Sprint add-item-requests
-    @Transient
+    @OneToOne
+    @JoinColumn(name = "request_id")
     private ItemRequest request;
 }

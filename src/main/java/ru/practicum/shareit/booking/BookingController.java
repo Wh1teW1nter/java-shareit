@@ -9,6 +9,8 @@ import ru.practicum.shareit.booking.dto.BookingResponse;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 
@@ -50,20 +52,23 @@ public class BookingController {
 
     @GetMapping
     public List<BookingResponse> findBookingsOutDtoOfUserResponse(@RequestParam(defaultValue = "ALL", required = false) String state,
-                                               @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                               @RequestHeader("X-Sharer-User-Id") Long userId,
+                                                                  @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                                                  @Positive @RequestParam(defaultValue = "10") int size) {
         BookingState bookingState = BookingState.valueOf(state);
-        log.info("пришел GET запрос /bookings?state с userId: {} и state: {}", userId, state);
-        List<BookingResponse> bookingResponse = bookingService.findBookingsOfUser(bookingState, userId);
-        log.info("отправлен ответ на GET запрос /bookings?state с userId: {} и state: {} с телом: {}", userId, state, bookingResponse);
+        log.info("пришел GET запрос /bookings?state с userId: {}, state: {}, from: {}, size: {}", userId, state, from, size);
+        List<BookingResponse> bookingResponse = bookingService.findBookingsOfUser(bookingState, userId, from, size);
+        log.info("отправлен ответ на GET запрос /bookings?state с userId: {}, state: {}, from: {}, size: {}  с телом: {}", userId, state, from, size, bookingResponse);
         return bookingResponse;
     }
 
     @GetMapping("/owner")
     public List<BookingResponse> findBookingsOutDtoOfOwnerResponse(@RequestParam(defaultValue = "ALL", required = false) String state,
-                                                   @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                                   @RequestHeader("X-Sharer-User-Id") Long userId, @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                                                   @Positive @RequestParam(defaultValue = "10") int size) {
         log.info("пришел GET запрос /bookings/owner?state с userId: {} и state: {}", userId, state);
         BookingState bookingState = BookingState.valueOf(state);
-        List<BookingResponse> bookingResponse = bookingService.findBookingsOfOwner(bookingState, userId);
+        List<BookingResponse> bookingResponse = bookingService.findBookingsOfOwner(bookingState, userId, from, size);
         log.info("отправлен ответ на GET запрос /bookings/owner?state с userId: {} и state: {} с телом: {}", userId, state, bookingResponse);
         return bookingResponse;
     }
