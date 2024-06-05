@@ -19,7 +19,7 @@ services:
     ports:
       - "9090:9090"
     depends_on:
-      - db
+      - postgres
     environment:
       - DB_NAME=shareit
       - POSTGRES_USER=root
@@ -34,7 +34,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      - postgres
       - server
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
